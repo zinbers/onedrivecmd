@@ -162,7 +162,7 @@ def do_get(client, args):
     for f in args.rest:
 
         # get a file item
-        item = get_remote_item(client, path = f)
+        item,_ = get_remote_item(client, path = f)
 
         # some error handling
         if item is None:
@@ -233,7 +233,7 @@ def do_share(client, args):
     for f in args.rest:
 
         # get a file item
-        item = get_remote_item(client, path = f)
+        item_ = get_remote_item(client, path = f)
 
         # some error handling
         if item is None:
@@ -261,7 +261,7 @@ def do_direct(client, args):
     for f in args.rest:
 
         # get a file item
-        item = get_remote_item(client, path = f)
+        item,_ = get_remote_item(client, path = f)
 
         # some error handling
         if item is None:
@@ -324,8 +324,10 @@ def do_list(client, args, lFolders = None):
     for path in folder_list:
         # get the folder entry point
         curPath = path_to_remote_path(path)
-        folder = get_remote_item(client, path = curPath)
-
+        folder,_ = get_remote_item(client, path = curPath)
+        if not folder:
+            print('folder not exist or empty!')
+            continue
         for i in folder:
             if show_fullpath:
                 name = 'od:' + curPath + '/' + i.name
@@ -413,12 +415,18 @@ def do_delete(client, args):
     """
     for i in args.rest:
         if i.startswith('od:/'):  # is somewhere remote
-            f = get_remote_item(client, path = i)
-            if f and f.id :
+            f, srcF = get_remote_item(client, path = i)
+            fid=''
+
+            if f and hasattr(f,'id') :
+                fid=f.id
+            elif srcF and hasattr(srcF,'id'):
+                fid = srcF.id
+            if fid and len(fid) > 0:
                 # make the request, we have to do it ourselves
-                req = requests.delete(api_base_url + 'drive/items/{id}'.format(id = f.id),
-                                  headers = {'Authorization': 'bearer {access_token}'.format(
-                                      access_token = get_access_token(client)), })
+                req = requests.delete(api_base_url + 'drive/items/{id}'.format(id = fid),
+                              headers = {'Authorization': 'bearer {access_token}'.format(
+                                  access_token = get_access_token(client)), })
             else:
                 print('can not find item {}'.format(args.rest))
 
