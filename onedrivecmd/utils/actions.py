@@ -178,7 +178,6 @@ def do_get(client, args):
             break
 
         local_name = path_to_name(f)
-
         # if hack, use aria2
         if args.hack:
             # the link still requires login
@@ -204,9 +203,9 @@ def do_get(client, args):
 
             # this will affect the download speed, but too large will result in progress bar update frequency too low
             chunk_size = 1048576 * 10
-
+            
             # Bar init
-            bar = Bar('Downloading', max = total_length / chunk_size, suffix = '%(percent).1f%% - %(eta)ds')
+            bar = Bar('Downloading', max = 1.0 * total_length / chunk_size, suffix = '%(percent).1f%% - %(eta)ds')
 
             # Save file as chunk, upload Bar as chunk written
             with open(local_name, 'wb') as f:
