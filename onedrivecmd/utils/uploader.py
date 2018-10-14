@@ -63,7 +63,10 @@ def upload_self(api_base_url = '', token = '', source_file = '', dest_path = '',
         dest_path += '/'
 
     # Prepare API call
-    dest_path = path_to_remote_path(dest_path) + '/' + path_to_name(source_file)
+    dest_path = path_to_remote_path(dest_path)
+    if not dest_path.endswith('/'):
+        dest_path += '/'
+    dest_path = dest_path + path_to_name(source_file)
     info_json = json.dumps({'item': {'@name.conflictBehavior': 'rename', 'name': path_to_name(source_file)}})
 
     api_url = api_base_url + 'drive/root:{dest_path}:/upload.createSession'.format(dest_path = dest_path)
