@@ -414,11 +414,13 @@ def do_delete(client, args):
     for i in args.rest:
         if i.startswith('od:/'):  # is somewhere remote
             f = get_remote_item(client, path = i)
-
-            # make the request, we have to do it ourselves
-            req = requests.delete(api_base_url + 'drive/items/{id}'.format(id = f.id),
+            if f and f.id :
+                # make the request, we have to do it ourselves
+                req = requests.delete(api_base_url + 'drive/items/{id}'.format(id = f.id),
                                   headers = {'Authorization': 'bearer {access_token}'.format(
                                       access_token = get_access_token(client)), })
+            else:
+                print('can not find item {}'.format(args.rest))
 
     return client
 
@@ -435,34 +437,33 @@ def do_mkdir(client, args):
     for folder_path in args.rest:
         if folder_path.startswith('od:'):
             folder_path = folder_path[3:]
-
+        
         # make sure we are making the right folder
         if folder_path.endswith('/'):
             folder_path = folder_path[:-1]
-
+        
         parent_path = os.path.dirname(folder_path)
-
-        req = requests.get(client.base_url + '/drive/root:{parent_path}'.format(parent_path = parent_path),
+        prePath=''
+        if not client.base_url.endswith('/'):
+            prePath += '/'
+        req = requests.get(client.base_url + prePath + 'drive/root:{parent_path}'.format(parent_path = parent_path),
                            headers = {'Authorization': 'bearer {access_token}'.format(
                                access_token = get_access_token(client)),
                                'Content-Type': 'application/json',
                                'Prefer': 'respond-async', })
-
         req = convert_utf8_dict_to_dict(req.json())
         parent_id = req['id']
-
         data = {
             "name": path_to_name(folder_path),
             "folder": {}
         }
 
-        req = requests.post(client.base_url + '/drive/items/{parent_id}/children'.format(parent_id = parent_id),
+        req = requests.post(client.base_url + prePath + 'drive/items/{parent_id}/children'.format(parent_id = parent_id),
                             headers = {'Authorization': 'bearer {access_token}'.format(
                                 access_token = get_access_token(client)),
                                 'Content-Type': 'application/json',
                                 'Prefer': 'respond-async', },
                             json = data)
-
         req = convert_utf8_dict_to_dict(req.json())
 
         if not req['name']:
